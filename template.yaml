@@ -1,0 +1,96 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Sample SAM Template using Application Auto Scaling and Provisioned Concurrency
+
+Parameters:
+
+  HTTPorSQS:
+    Description: HTTP or SQS for generator function
+    Type: String
+    AllowedValues: 
+      - SQS
+      - HTTP
+    Default: HTTP
+    ConstraintDescription: CreateSQS must specify HTTP or SQS (default HTTP)
+
+Globals:
+  Function:
+    Tracing: Active
+
+Resources:
+
+  MySQS:
+    Type: AWS::SQS::Queue
+
+  MyGenerator:
+    Type: AWS::Serverless::Function
+    Properties:
+      MemorySize: 3008
+      Timeout: 60
+      ReservedConcurrentExecutions: 1
+      CodeUri: lambda/generator
+      Handler: main
+      Runtime: go1.x
+      Environment:
+        Variables:
+          HTTPSQS: !Ref HTTPorSQS
+          SQSurl: !Ref MySQS
+          MessageAmount: '100'
+          GoRoutineAmount: '100'
+          HTTPurl: !Sub 'https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/'
+      Policies:
+        - SQSSendMessagePolicy:
+            QueueName: !GetAtt MySQS.QueueName
+
+  MyFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      AutoPublishAlias: live
+
+      MemorySize: 128
+      Timeout: 5
+      ReservedConcurrentExecutions: 10
+      CodeUri: lambda/backend
+      Handler: main
+      Runtime: go1.x
+      Events: 
+        APIGW:
+          Type: HttpApi
+          Properties:
+            Path: '/{proxy+}'
+            Method: get
+      DeploymentPreference:
+        Type: AllAtOnce
+      ProvisionedConcurrencyConfig:
+        ProvisionedConcurrentExecutions: 1
+
+  MyScalableTarget:
+    Type: AWS::ApplicationAutoScaling::ScalableTarget
+    Properties:
+      MaxCapacity: 10
+      MinCapacity: 1
+      ResourceId: !Sub function:${MyFunction}:live
+      RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/lambda.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_Lambda
+      ScalableDimension: lambda:function:ProvisionedConcurrency
+      ServiceNamespace: lambda
+    DependsOn: MyFunctionAliaslive 
+
+  MyTargetTrackingScalingPolicy:
+    Type: AWS::ApplicationAutoScaling::ScalingPolicy
+    Properties:
+      PolicyName: utilization
+      PolicyType: TargetTrackingScaling
+      ScalingTargetId: !Ref MyScalableTarget
+      TargetTrackingScalingPolicyConfiguration:
+        TargetValue: 0.9
+        PredefinedMetricSpecification:
+          PredefinedMetricType: LambdaProvisionedConcurrencyUtilization
+
+Outputs:
+  
+  SQSQueue:
+    Value: !Ref MySQS
+
+  APIGW:
+    Value: !Sub 'https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/'
