@@ -14,19 +14,20 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 )
 
+const (
+	msgPerThread = 100
+)
+
 func handler() {
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
 	}))
 
 	// set counter for total sent messages
-	x := 0
-
-	// get the amount of messages to send, default 10
-	c, _ := strconv.Atoi(os.Getenv("GoRoutineAmount"))
+	allCount := 0
 
 	// get the amount of messages per go routine, default 10
-	d, _ := strconv.Atoi(os.Getenv("MessageAmount"))
+	msgCount, _ := strconv.Atoi(os.Getenv("MessageAmount"))
 
 	// get whether HTTP or SQS messages should be sent by the generator
 	mode := os.Getenv("HTTPSQS")
@@ -42,17 +43,17 @@ func handler() {
 
 		// spawn a new go routine for every http request
 
-		for a := 0; a < c; a++ {
+		for a := 0; a < msgCount; a++ {
 
 			// create a wait group to wait for go subroutines
 			var wg sync.WaitGroup
 
 			// spawn go routines depending on total count
-			for b := 0; b < d; b++ {
+			for b := 0; b < msgPerThread; b++ {
 
 				// add one count to the workgroup
 				wg.Add(1)
-				x += 1
+				allCount += 1
 
 				// run the send message command in parallel
 				go func() {
@@ -72,7 +73,7 @@ func handler() {
 			wg.Wait()
 
 			//print the total count of messages
-			log.Println("* sent " + strconv.Itoa(x) + " messages.")
+			log.Println("* sent " + strconv.Itoa(allCount) + " SQS messages.")
 		}
 	}
 
@@ -82,17 +83,17 @@ func handler() {
 		s3uri := os.Getenv("HTTPurl")
 
 		// spawn a new go routine for every http request
-		for a := 0; a < c; a++ {
+		for a := 0; a < msgCount; a++ {
 
 			// create a wait group to wait for go subroutines
 			var wg sync.WaitGroup
 
 			// spawn go routines depending on total count
-			for b := 0; b < d; b++ {
+			for b := 0; b <  msgPerThread; b++ {
 
 				// add one count to the workgroup
 				wg.Add(1)
-				x += 1
+				allCount += 1
 
 				// run the send message command in parallel
 				go func() {
@@ -112,7 +113,7 @@ func handler() {
 			wg.Wait()
 
 			//print the total count of messages
-			log.Println("* sent " + strconv.Itoa(x) + " messages.")
+			log.Println("* sent " + strconv.Itoa(allCount) + " HTTP messages to " + s3uri)
 		}
 	}
 }

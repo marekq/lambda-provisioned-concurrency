@@ -3,7 +3,7 @@ sam validate
 
 #
 
-### generator
+### Generator
 
 # copy the generator source code
 cp lambda/generator/main.go .
@@ -23,7 +23,7 @@ mv main lambda/generator/
 
 #
 
-### http
+### HTTP
 
 # copy the backend source code
 cp lambda/http/main.go .
