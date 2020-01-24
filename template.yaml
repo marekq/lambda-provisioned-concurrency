@@ -39,8 +39,8 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       MemorySize: 3008
-      Timeout: 30
-      ReservedConcurrentExecutions: 1
+      Timeout: 60
+      ReservedConcurrentExecutions: 3
       CodeUri: lambda/generator
       Handler: main
       Runtime: go1.x
@@ -48,7 +48,7 @@ Resources:
         Variables:
           HTTPSQS: !Ref HTTPorSQS
           SQSurl: !Ref MsgSQS
-          MessageAmount: '100'
+          MessageAmount: '250'
           HTTPurl: !Sub 'https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/'
       Policies:
         - SQSSendMessagePolicy:
@@ -60,7 +60,7 @@ Resources:
     Properties:
       MemorySize: 128
       Timeout: 5
-      ReservedConcurrentExecutions: 100
+      ReservedConcurrentExecutions: 200
       CodeUri: lambda/http
       Handler: main
       Runtime: go1.x
@@ -96,7 +96,7 @@ Resources:
       PolicyType: TargetTrackingScaling
       ScalingTargetId: !Ref HTTPTarget
       TargetTrackingScalingPolicyConfiguration:
-        TargetValue: 0.9
+        TargetValue: 0.1
         PredefinedMetricSpecification:
           PredefinedMetricType: LambdaProvisionedConcurrencyUtilization
 
@@ -106,7 +106,7 @@ Resources:
     Properties:
       MemorySize: 128
       Timeout: 5
-      ReservedConcurrentExecutions: 10
+      ReservedConcurrentExecutions: 200
       CodeUri: lambda/sqs
       Handler: main
       Runtime: go1.x
@@ -142,7 +142,7 @@ Resources:
       PolicyType: TargetTrackingScaling
       ScalingTargetId: !Ref SQSTarget
       TargetTrackingScalingPolicyConfiguration:
-        TargetValue: 0.9
+        TargetValue: 0.1
         PredefinedMetricSpecification:
           PredefinedMetricType: LambdaProvisionedConcurrencyUtilization
 

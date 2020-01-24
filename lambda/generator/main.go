@@ -3,20 +3,29 @@ package main
 import (
 	"log"
 	"math/rand"
+	"net/http"
+	"os"
 	"strconv"
 	"sync"
-	"os"
-	"net/http"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
+	"github.com/aws/aws-xray-sdk-go/xray"
 )
 
 const (
 	msgPerThread = 100
 )
+
+func init() {
+	xray.Configure(xray.Config{
+		DaemonAddr:     "127.0.0.1:2000",
+		LogLevel:       "info",
+		ServiceVersion: "1.2.3",
+	})
+}
 
 func handler() {
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
@@ -37,7 +46,7 @@ func handler() {
 
 		// get the SQS queue URL
 		q := os.Getenv("SQSurl")
-		
+
 		// create a session with sqs
 		svc1 := sqs.New(sess)
 
@@ -58,7 +67,7 @@ func handler() {
 				// run the send message command in parallel
 				go func() {
 					defer wg.Done()
-					ri := strconv.Itoa(rand.Intn(9999999) + rand.Intn(9999999) * rand.Intn(9999999))
+					ri := strconv.Itoa(rand.Intn(9999999) + rand.Intn(9999999)*rand.Intn(9999999))
 
 					// send the message to the sqs queue
 					_, err := svc1.SendMessage(&sqs.SendMessageInput{MessageBody: aws.String(ri), QueueUrl: aws.String(q)})
@@ -89,7 +98,7 @@ func handler() {
 			var wg sync.WaitGroup
 
 			// spawn go routines depending on total count
-			for b := 0; b <  msgPerThread; b++ {
+			for b := 0; b < msgPerThread; b++ {
 
 				// add one count to the workgroup
 				wg.Add(1)
@@ -98,7 +107,7 @@ func handler() {
 				// run the send message command in parallel
 				go func() {
 					defer wg.Done()
-					ri := strconv.Itoa(rand.Intn(9999999) + rand.Intn(9999999) * rand.Intn(9999999))
+					ri := strconv.Itoa(rand.Intn(9999999) + rand.Intn(9999999)*rand.Intn(9999999))
 
 					// send the http message to the api gateway
 					_, err := http.Get(s3uri + ri)
