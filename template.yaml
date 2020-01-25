@@ -74,13 +74,13 @@ Resources:
       DeploymentPreference:
         Type: AllAtOnce
       ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: 10
+        ProvisionedConcurrentExecutions: 1
 
   # HTTP scalable target
   HTTPTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
-      MaxCapacity: 10
+      MaxCapacity: 100
       MinCapacity: 1
       ResourceId: !Sub function:${HTTPFunc}:live
       RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/lambda.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_Lambda
@@ -96,7 +96,7 @@ Resources:
       PolicyType: TargetTrackingScaling
       ScalingTargetId: !Ref HTTPTarget
       TargetTrackingScalingPolicyConfiguration:
-        TargetValue: 0.1
+        TargetValue: 0.9
         PredefinedMetricSpecification:
           PredefinedMetricType: LambdaProvisionedConcurrencyUtilization
 
@@ -120,13 +120,13 @@ Resources:
       DeploymentPreference:
         Type: AllAtOnce
       ProvisionedConcurrencyConfig:
-        ProvisionedConcurrentExecutions: 10
+        ProvisionedConcurrentExecutions: 1
         
   # SQS scalable target
   SQSTarget:
     Type: AWS::ApplicationAutoScaling::ScalableTarget
     Properties:
-      MaxCapacity: 10
+      MaxCapacity: 100
       MinCapacity: 1
       ResourceId: !Sub function:${SQSFunc}:live
       RoleARN: !Sub arn:aws:iam::${AWS::AccountId}:role/aws-service-role/lambda.application-autoscaling.amazonaws.com/AWSServiceRoleForApplicationAutoScaling_Lambda
@@ -142,7 +142,7 @@ Resources:
       PolicyType: TargetTrackingScaling
       ScalingTargetId: !Ref SQSTarget
       TargetTrackingScalingPolicyConfiguration:
-        TargetValue: 0.1
+        TargetValue: 0.9
         PredefinedMetricSpecification:
           PredefinedMetricType: LambdaProvisionedConcurrencyUtilization
 

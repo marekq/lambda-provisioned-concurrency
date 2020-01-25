@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"log"
 	"math/rand"
 	"net/http"
+
 	"os"
 	"strconv"
 	"sync"
@@ -12,22 +14,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/aws/aws-xray-sdk-go/xray"
 )
 
 const (
 	msgPerThread = 100
 )
 
-func init() {
-	xray.Configure(xray.Config{
-		DaemonAddr:     "127.0.0.1:2000",
-		LogLevel:       "info",
-		ServiceVersion: "1.2.3",
-	})
-}
-
-func handler() {
+func handler(ctx context.Context) {
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
 	}))
@@ -66,6 +59,7 @@ func handler() {
 
 				// run the send message command in parallel
 				go func() {
+
 					defer wg.Done()
 					ri := strconv.Itoa(rand.Intn(9999999) + rand.Intn(9999999)*rand.Intn(9999999))
 
@@ -88,6 +82,7 @@ func handler() {
 
 	// if HTTP requests should be sent
 	if mode == "HTTP" {
+
 		// get the API GW URL
 		s3uri := os.Getenv("HTTPurl")
 
