@@ -27,7 +27,8 @@ Resources:
         Variables:
           HTTPSQS: 'SQS'
           SQSurl: !Ref MsgSQS
-          MessageAmount: '250'
+          MessageAmount: '1000'
+          MessageThread: '100'
       Policies:
         - SQSSendMessagePolicy:
             QueueName: !GetAtt MsgSQS.QueueName
@@ -45,7 +46,8 @@ Resources:
       Environment:
         Variables:
           HTTPSQS: HTTP
-          MessageAmount: '250'
+          MessageAmount: '100'
+          MessageThread: '1000'
           HTTPurl: !Sub 'https://${ServerlessHttpApi}.execute-api.${AWS::Region}.amazonaws.com/'
 
   # HTTP function

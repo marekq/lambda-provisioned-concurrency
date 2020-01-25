@@ -29,7 +29,7 @@ mv main lambda/generator/
 cp lambda/http/main.go .
 
 # build the go binary for linux that can run on lambda
-GOOS=linux go build -ldflags="-s -w" main.go 
+GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" main.go 
 
 # compress the go binary, which reduces size by ~35%
 
@@ -48,7 +48,7 @@ mv main lambda/http/
 cp lambda/sqs/main.go .
 
 # build the go binary for linux that can run on lambda
-GOOS=linux go build -ldflags="-s -w" main.go 
+GOOS=linux GOARCH=amd64 go build -ldflags="-s -w" main.go 
 
 # compress the go binary, which reduces size by ~35%
 

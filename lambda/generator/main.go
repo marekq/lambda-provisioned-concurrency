@@ -16,10 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/sqs"
 )
 
-const (
-	msgPerThread = 100
-)
-
 func handler(ctx context.Context) {
 	sess := session.Must(session.NewSessionWithOptions(session.Options{
 		SharedConfigState: session.SharedConfigEnable,
@@ -30,6 +26,7 @@ func handler(ctx context.Context) {
 
 	// get the amount of messages per go routine, default 10
 	msgCount, _ := strconv.Atoi(os.Getenv("MessageAmount"))
+	msgThread, _ := strconv.Atoi(os.Getenv("MessageThread"))
 
 	// get whether HTTP or SQS messages should be sent by the generator
 	mode := os.Getenv("HTTPSQS")
@@ -51,7 +48,7 @@ func handler(ctx context.Context) {
 			var wg sync.WaitGroup
 
 			// spawn go routines depending on total count
-			for b := 0; b < msgPerThread; b++ {
+			for b := 0; b < msgThread; b++ {
 
 				// add one count to the workgroup
 				wg.Add(1)
@@ -93,7 +90,7 @@ func handler(ctx context.Context) {
 			var wg sync.WaitGroup
 
 			// spawn go routines depending on total count
-			for b := 0; b < msgPerThread; b++ {
+			for b := 0; b < msgThread; b++ {
 
 				// add one count to the workgroup
 				wg.Add(1)
