@@ -64,5 +64,11 @@ mv main lambda/sqs/
 # remove the main.go file
 rm main.go
 
-# deploy sam
-sam deploy -g
+# deploy sam, check if samconfig.toml file is present
+if [ ! -f samconfig.toml ]; then
+    echo "no samconfig.toml found, starting guided deploy"
+    sam deploy -g
+else
+    echo "samconfig.toml found, proceeding to deploy"
+    sam deploy
+fi
